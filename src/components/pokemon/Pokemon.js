@@ -46,8 +46,14 @@ export default class Pokemon extends Component {
     evs: "",
     hatchSteps: "",
     firstEvolutionImageUrl: "",
+    firstEvolutionIndex: "",
+    firstEvolutionName: "",
     secondEvolutionImageUrl: "",
+    secondEvolutionIndex: "",
+    secondEvolutionName: "",
     thirdEvolutionImageUrl: "",
+    thirdEvolutionIndex: "",
+    thirdEvolutionName: "",
   };
   async componentDidMount() {
     const { pokemonIndex } = this.props.match.params;
@@ -147,13 +153,72 @@ export default class Pokemon extends Component {
 
         const evolutionChainUrl = res.data.evolution_chain.url;
 
+        axios.get(evolutionChainUrl).then((response) => {
+          try {
+            const secondEvolutionUrl = response.data.chain.evolves_to[0].species
+              ? response.data.chain.evolves_to[0].species.url
+              : null;
+            if (secondEvolutionUrl) {
+              const secondEvolutionName =
+                response.data.chain.evolves_to[0].species.name;
+              const secondEvolutionIndex = secondEvolutionUrl.split("/")[
+                secondEvolutionUrl.split("/").length - 2
+              ];
+              let secondEvolutionPokemonUrl = `https://pokeapi.co/api/v2/pokemon/${secondEvolutionIndex}/`;
+              axios.get(secondEvolutionPokemonUrl).then((response) => {
+                let secondEvolutionImageUrl =
+                  response.data.sprites.front_default;
+                this.setState({
+                  secondEvolutionImageUrl,
+                  secondEvolutionIndex,
+                  secondEvolutionName,
+                });
+              });
+            }
+          } catch {
+            let secondEvolutionImageUrl = "";
+            this.setState({ secondEvolutionImageUrl });
+          }
+        });
+
+        axios.get(evolutionChainUrl).then((response) => {
+          try {
+            const thirdEvolutionUrl = response.data.chain.evolves_to[0]
+              .evolves_to[0].species
+              ? response.data.chain.evolves_to[0].evolves_to[0].species.url
+              : null;
+            if (thirdEvolutionUrl) {
+              const thirdEvolutionName =
+                response.data.chain.evolves_to[0].evolves_to[0].species.name;
+              const thirdEvolutionIndex = thirdEvolutionUrl.split("/")[
+                thirdEvolutionUrl.split("/").length - 2
+              ];
+              let thirdEvolutionPokemonUrl = `https://pokeapi.co/api/v2/pokemon/${thirdEvolutionIndex}/`;
+              axios.get(thirdEvolutionPokemonUrl).then((response) => {
+                let thirdEvolutionImageUrl =
+                  response.data.sprites.front_default;
+                this.setState({
+                  thirdEvolutionImageUrl,
+                  thirdEvolutionName,
+                  thirdEvolutionIndex,
+                });
+              });
+            }
+          } catch {
+            let secondEvolutionImageUrl = "";
+            this.setState({ secondEvolutionImageUrl });
+          }
+        });
+
         return axios.get(evolutionChainUrl);
       })
       .then((response) => {
         const speciesUrl = response.data.chain.species.url;
+        const firstEvolutionName = response.data.chain.species.name;
         const firstEvolutionIndex = speciesUrl.split("/")[
           speciesUrl.split("/").length - 2
         ];
+        this.setState({ firstEvolutionIndex, firstEvolutionName });
         let firstEvolutionUrl = `https://pokeapi.co/api/v2/pokemon/${firstEvolutionIndex}/`;
         return axios.get(firstEvolutionUrl);
       })
@@ -447,17 +512,43 @@ export default class Pokemon extends Component {
               <h4>Evolution Chain</h4>
             </div>
             <div className="row">
-              <div className="col-md-3">
-                <img
-                  className="card-img-top rounded mx-auto mt-2"
-                  src={this.state.firstEvolutionImageUrl}
-                  alt={this.state.name}
-                />
+              <div className="col-md-4">
+                <figure>
+                  <img
+                    className="card-img-top rounded mx-auto mt-2"
+                    src={this.state.firstEvolutionImageUrl}
+                  />
+                  <figcaption className="text-align-center">
+                    {this.state.firstEvolutionName}
+                  </figcaption>
+                </figure>
+              </div>
+              <div className="col-md-4">
+                <figure>
+                  <img
+                    className="card-img-top rounded mx-auto mt-2"
+                    src={this.state.secondEvolutionImageUrl}
+                  />
+                  <figcaption className="text-align-center">
+                    {this.state.secondEvolutionName}
+                  </figcaption>
+                </figure>
+              </div>
+              <div className="col-md-4">
+                <figure>
+                  <img
+                    className="card-img-top rounded mx-auto mt-2"
+                    src={this.state.thirdEvolutionImageUrl}
+                  />
+                  <figcaption className="text-align-center">
+                    {this.state.thirdEvolutionName}
+                  </figcaption>
+                </figure>
               </div>
             </div>
           </div>
 
-          <div className="card-footer text-muted">
+          <div className="card-footer text-muted mb-2">
             Data From{" "}
             <a
               href="https://pokeapi.co/"
