@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import styled from "styled-components";
 import spinner from "../layout/spinner.gif";
+import axios from "axios";
 import { Link } from "react-router-dom";
 
 const Sprite = styled.img`
@@ -38,31 +39,44 @@ export default class PokemonCard extends Component {
     name: "",
     imageUrl: "",
     pokemonIndex: "",
+    notGif: false,
     imageLoading: true,
     tooManyRequests: false,
   };
 
-  componentDidMount() {
+  async componentDidMount() {
     const { name, url } = this.props;
     const pokemonIndex = url.split("/")[url.split("/").length - 2];
-    var imageUrl;
+    let imageUrl;
+    let notGif = false;
     if (name === "nidoran-m" || name === "nidoran-f") {
       imageUrl = `https://projectpokemon.org/images/normal-sprite/${name.replace(
         "-",
         "_"
       )}.gif`;
+    } else if (name === "deoxys-normal") {
+      imageUrl = `https://projectpokemon.org/images/normal-sprite/deoxys.gif`;
+    } else if (name === "ho-oh") {
+      imageUrl = `https://projectpokemon.org/images/normal-sprite/ho-oh.gif`;
+    } else if (pokemonIndex > 10000) {
+      imageUrl = `https://github.com/PokeAPI/sprites/blob/master/sprites/pokemon/${pokemonIndex}.png?raw=true`;
+    } else if (name.includes("-")) {
+      const pokemonUrl = `https://pokeapi.co/api/v2/pokemon/${pokemonIndex}/`;
+      const pokemonRes = await axios.get(pokemonUrl);
+      imageUrl = pokemonRes.data.sprites.front_default;
+      notGif = true;
     } else {
       imageUrl = `https://projectpokemon.org/images/normal-sprite/${name}.gif`;
     }
 
-    this.setState({ name, imageUrl, pokemonIndex });
+    this.setState({ name, imageUrl, pokemonIndex, notGif });
   }
   render() {
     return (
       <div className="col-md-6 col-sm-6 mb-5">
         <StyledLink to={`pokemon/${this.state.pokemonIndex}`}>
           <Card className="card">
-            <h5 className="card-header">{this.state.pokemonIndex}</h5>
+            <h5 className="card-header">Pokemon #{this.state.pokemonIndex}</h5>
             {this.state.imageLoading ? (
               <img
                 src={spinner}
@@ -84,7 +98,7 @@ export default class PokemonCard extends Component {
                   : { display: "block" }
               }
             ></Sprite>
-            {this.state.tooManyRequests ? (
+            {this.state.tooManyRequests && !this.state.notGif ? (
               <h6 className="mx-auto">
                 <span className="badge badge-danger mt-2">
                   Too many requests

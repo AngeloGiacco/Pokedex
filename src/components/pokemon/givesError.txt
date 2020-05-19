@@ -1,0 +1,17 @@
+axios
+        .get(evolutionChainUrl)
+        .then((response) => {
+          const secondEvolutionUrl = response.data.chain.evolves_to
+            ? response.data.chain.evolves_to.species.url
+            : null;
+          if (secondEvolutionUrl) {
+            const secondEvolution = secondEvolutionUrl.split("/")[
+              secondEvolutionUrl.split("/").length - 2
+            ];
+            let secondEvolutionPokemonUrl = `https://pokeapi.co/api/v2/pokemon/${secondEvolution}/`;
+            axios.get(secondEvolutionPokemonUrl).then((response) => {
+                const secondEvolutionImageUrl = response.data.sprites.front_default;
+                this.setState({secondEvolutionImageUrl});
+            })
+          }
+        });
